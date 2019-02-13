@@ -42,6 +42,10 @@ namespace Stegosaurus {
       add_pad(payload_pad);
     }
 
+    public override bool start() {
+      return payload_pad.activate_mode(Gst.PadMode.PULL, true);
+    }
+
     public override Gst.FlowReturn transform_ip(Gst.Buffer iobuf) {
       return Gst.FlowReturn.OK;
     }
