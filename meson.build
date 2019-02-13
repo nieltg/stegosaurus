@@ -6,7 +6,8 @@ project(
 
 dependencies = [
   dependency('gstreamer-1.0'),
-  dependency('gstreamer-base-1.0')
+  dependency('gstreamer-base-1.0'),
+  dependency('gstreamer-video-1.0')
 ]
 
 subdir('src')

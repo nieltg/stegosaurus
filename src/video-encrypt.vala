@@ -46,6 +46,25 @@ namespace Stegosaurus {
       return payload_pad.activate_mode(Gst.PadMode.PULL, true);
     }
 
+    protected Gst.Video.Info in_info;
+    protected Gst.Video.Info out_info;
+
+    public override bool set_caps(Gst.Caps incaps, Gst.Caps outcaps) {
+      Gst.Video.Info in_info, out_info;
+
+      in_info = new Gst.Video.Info();
+      out_info = new Gst.Video.Info();
+
+      if (in_info.from_caps(incaps) && out_info.from_caps(outcaps)) {
+        this.in_info = in_info;
+        this.out_info = out_info;
+
+        return true;
+      } else {
+        return false;
+      }
+    }
+
     public override Gst.FlowReturn transform_ip(Gst.Buffer iobuf) {
       return Gst.FlowReturn.OK;
     }
