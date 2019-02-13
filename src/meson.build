@@ -1,7 +1,8 @@
 stegosaurus_files = files(
   'plugin-meta.c',
   'plugin.vala',
-  'vigenere.vala'
+  'vigenere.vala',
+  'video-encrypt.vala'
 )
 
 shared_library(
