@@ -20,12 +20,12 @@ namespace Stegosaurus {
         "sink",
         Gst.PadDirection.SINK,
         Gst.PadPresence.ALWAYS,
-        new Gst.Caps.simple("video/x-raw", "format", typeof(string), "RGB"));
+        new Gst.Caps.empty_simple("video/x-raw"));
       src_factory = new Gst.PadTemplate(
         "src",
         Gst.PadDirection.SRC,
         Gst.PadPresence.ALWAYS,
-        new Gst.Caps.simple("video/x-raw", "format", typeof(string), "RGB"));
+        new Gst.Caps.empty_simple("video/x-raw"));
 
       add_pad_template(payload_factory);
       add_pad_template(sink_factory);
