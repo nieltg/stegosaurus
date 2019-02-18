@@ -63,7 +63,7 @@ namespace Stegosaurus {
 
   public class Decoder : GLib.Object {
     protected static string stego = "STEGOSAURUS";
-    private bool is_stego = true;
+    public bool is_stego = true;
     private Header header;
 
     public Decoder(){
@@ -127,26 +127,29 @@ namespace Stegosaurus {
     while (decoder.decode_header(i, result[i])){
       i++;
     }
-    var header = decoder.get_header();
-    stdout.printf("%s\n", header.name);
-    stdout.printf("%d\n", (int) header.one_bit);
-    stdout.printf("%d\n", (int) header.is_frame_acak);
-    stdout.printf("%d\n", (int) header.is_pixel_acak);
+    if (decoder.is_stego){
+      var header = decoder.get_header();
+      stdout.printf("%s\n", header.name);
+      stdout.printf("%d\n", (int) header.one_bit);
+      stdout.printf("%d\n", (int) header.is_frame_acak);
+      stdout.printf("%d\n", (int) header.is_pixel_acak);
+    }
 
     // Example decode 2
     char[] bytes = new char[4]{'S', 'T', 'g', 's'};
 
-    var decoder2 = new Decoder();
+    decoder = new Decoder();
     i=0;
-    while (decoder2.decode_header(i, bytes[i])){
+    while (decoder.decode_header(i, bytes[i])){
       i++;
     }
-
-    var header2 = decoder2.get_header();
-    stdout.printf("%s\n", header2.name);
-    stdout.printf("%d\n", (int) header2.one_bit);
-    stdout.printf("%d\n", (int) header2.is_frame_acak);
-    stdout.printf("%d\n", (int) header2.is_pixel_acak);
+    if (decoder.is_stego){
+      var header = decoder.get_header();
+      stdout.printf("%s\n", header.name);
+      stdout.printf("%d\n", (int) header.one_bit);
+      stdout.printf("%d\n", (int) header.is_frame_acak);
+      stdout.printf("%d\n", (int) header.is_pixel_acak);
+    }
     return 0;
   }
 }
