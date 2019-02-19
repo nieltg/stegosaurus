@@ -14,8 +14,14 @@ def apply_lsb(data, data_lsb, n_bits=1):
     data &= ~lsb_mask
     data |= data_lsb
 
-def apply_lsb_random(data, data_lsb, n_bits=1):
-    pass
+def apply_lsb_random(data, data_lsb, r, n_bits=1):
+    indices = [i for i in range(len(data))]
+    r.shuffle(indices)
+    indices = indices[:len(data_lsb)]
+    
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
+
+    data.put(indices, (data[indices] & ~lsb_mask) | data_lsb)
 
 def psnr_video(data_1, data_2):
     flat_size = np.prod(data_1.shape[1:])
