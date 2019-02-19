@@ -3,11 +3,18 @@ import numpy as np
 from ..util import gen_lsb_mask
 
 
-def apply_bits_to_lsb(data, lsb_data, n_bits=1):
+def apply_lsb(data, data_lsb, n_bits=1):
     lsb_mask = gen_lsb_mask(n_bits)
 
-    for i in range(0, len(lsb_data)):
-        data[i] = (data[i] & ~lsb_mask) | lsb_data[i]
+    for i in range(0, len(data_lsb)):
+        data[i] = (data[i] & ~lsb_mask) | data_lsb[i]
+
+
+def apply_header(data, header):
+    header_data_lsb = np.unpackbits(header.serialize())
+
+    apply_lsb(data.reshape(-1), header_data_lsb)
+    return len(header_data_lsb)
 
 
 def encode(data, payload_data, header, passphrase=None):
