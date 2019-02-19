@@ -8,6 +8,13 @@ def gen_lsb_mask(n_bits=1):
     return mask
 
 
+def prepare_payload(payload_data, n_bits=1):
+    payload_bits = np.unpackbits(payload_data).reshape(-1, n_bits)
+
+    payload_msbs = np.packbits(payload_bits, axis=-1).reshape(-1)
+    return np.right_shift(payload_msbs, 8 - n_bits)
+
+
 def apply_lsb(data, data_lsb, n_bits=1):
     lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
 

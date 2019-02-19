@@ -2,7 +2,7 @@ import numpy as np
 
 from .header import VideoHeader
 
-from ..util import apply_lsb, apply_lsb_random
+from ..util import apply_lsb, apply_lsb_random, prepare_payload
 
 
 def apply_header(data, header):
@@ -31,13 +31,6 @@ def build_frame_list(data, data_header_len):
         frames.append(frame)
 
     return frames
-
-
-def prepare_payload(payload_data, n_bits=1):
-    payload_bits = np.unpackbits(payload_data).reshape(-1, n_bits)
-
-    payload_msbs = np.packbits(payload_bits, axis=-1).reshape(-1)
-    return np.right_shift(payload_msbs, 8 - n_bits)
 
 
 def encode(data, payload_data, header: VideoHeader, passphrase):
