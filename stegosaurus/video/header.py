@@ -67,7 +67,7 @@ class VideoHeader:
         ])
 
     @classmethod
-    def from_bytes(cls, data_factory):
+    def from_factory(cls, data_factory):
         h = cls()
 
         # Magic.
@@ -88,13 +88,13 @@ class VideoHeader:
         while True:
             fetched_data = data_factory.fetch(64, complete=False)
 
-            search_indices = (fetched_data == 0).nonzero()
+            search_indices = np.flatnonzero(fetched_data == 0)
             if len(search_indices) > 0:
                 null_index = search_indices[0]
 
                 previous_chunks.append(fetched_data[:null_index])
-                h.payload_name = str.encode(
-                    np.concatenate(previous_chunks).tobytes(), 'utf8')
+                h.payload_name = np.concatenate(
+                    previous_chunks).tobytes().decode('utf8')
                 break
             else:
                 previous_chunks.append(fetched_data)
