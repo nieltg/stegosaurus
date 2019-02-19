@@ -2,7 +2,7 @@ import numpy as np
 
 
 def shape(data, key_length):
-    n_padding = len(data) % key_length
+    n_padding = key_length - (len(data) % key_length)
     padded_data = np.concatenate([data, np.zeros(n_padding, dtype=np.uint8)])
     return padded_data.reshape(-1, key_length)
 
