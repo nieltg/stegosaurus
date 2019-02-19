@@ -6,31 +6,36 @@ class ChunkFactory:
         self.buffer = None
         self.buffer_offset = 0
 
-        self.fetched_len = 0
+        self.fetched_size = 0
 
     def fetch(self, size, complete=True):
         chunks = []
+        needed_size = size
 
-        while size > 0:
-            if self.buffer is None or (
-                    len(self.buffer) - self.buffer_offset) == 0:
-                self.buffer = self.load()
-                self.buffer_offset = 0
+        try:
+            while needed_size > 0:
+                if self.buffer is None or (
+                        len(self.buffer) - self.buffer_offset) == 0:
+                    self.buffer = self.load()
+                    self.buffer_offset = 0
 
-            if self.buffer is None:
-                if complete:
-                    raise BufferError("buffer underflow")
+                if self.buffer is None:
+                    if complete:
+                        raise BufferError("buffer underflow")
+                    else:
+                        break
                 else:
-                    break
-            else:
-                copy_len = min(len(self.buffer) - self.buffer_offset, size)
+                    copy_len = min(
+                        len(self.buffer) - self.buffer_offset, needed_size)
 
-                chunks.append(
-                    self.buffer[self.buffer_offset:self.buffer_offset +
-                                copy_len])
+                    chunks.append(
+                        self.buffer[self.buffer_offset:self.buffer_offset +
+                                    copy_len])
 
-                self.buffer_offset += copy_len
-                size -= copy_len
+                    self.buffer_offset += copy_len
+                    needed_size -= copy_len
+        finally:
+            self.fetched_size += size - needed_size
 
         return np.concatenate(chunks)
 
@@ -84,6 +89,7 @@ class VideoHeader:
 
         # Null-terminated payload name.
         previous_chunks = []
+        h.fetched_size = data_factory.fetched_size
 
         while True:
             fetched_data = data_factory.fetch(64, complete=False)
@@ -93,8 +99,11 @@ class VideoHeader:
                 null_index = search_indices[0]
 
                 previous_chunks.append(fetched_data[:null_index])
-                h.payload_name = np.concatenate(
-                    previous_chunks).tobytes().decode('utf8')
+
+                merged_chunk = np.concatenate(previous_chunks)
+                h.fetched_size += len(merged_chunk) + 1
+
+                h.payload_name = merged_chunk.tobytes().decode('utf8')
                 break
             else:
                 previous_chunks.append(fetched_data)

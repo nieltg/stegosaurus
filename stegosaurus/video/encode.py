@@ -43,6 +43,9 @@ def prepare_payload(payload_data, n_bits=1):
 def encode(data, payload_data, header: VideoHeader, passphrase):
     r = np.random.RandomState(passphrase)
 
+    # Metadata.
+    header.payload_size = len(payload_data)
+
     # Header.
     data_header_len = apply_header(data, header)
 
