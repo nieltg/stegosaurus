@@ -10,8 +10,10 @@ from ..util import apply_lsb
 def apply_header(data, header):
     header_data_lsb = np.unpackbits(header.serialize())
 
-    apply_lsb(data.reshape(-1), header_data_lsb)
-    return len(header_data_lsb)
+    copy_len = len(header_data_lsb)
+
+    apply_lsb(data.reshape(-1)[:copy_len], header_data_lsb)
+    return copy_len
 
 
 def build_frame_list(data, data_header_len):
@@ -36,7 +38,8 @@ def build_frame_list(data, data_header_len):
 def prepare_payload(payload_data, n_bits=1):
     payload_bits = np.unpackbits(payload_data).reshape(-1, n_bits)
 
-    return np.right_shift(np.packbits(payload_bits, axis=-1), 8 - n_bits)
+    payload_msbs = np.packbits(payload_bits, axis=-1).reshape(-1)
+    return np.right_shift(payload_msbs, 8 - n_bits)
 
 
 def encode(data, payload_data, header: VideoHeader, passphrase):
@@ -72,7 +75,7 @@ def encode(data, payload_data, header: VideoHeader, passphrase):
 
             # TODO: Random pixel.
 
-            apply_lsb(frame, frame_payload_lsb, n_bits)
+            apply_lsb(frame[:copy_len], frame_payload_lsb, n_bits)
             payload_lsb_index += copy_len
         else:
             return True
