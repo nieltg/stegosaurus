@@ -8,10 +8,7 @@ class AudioHeader:
         self.payload_name = ""
         self.payload_size = 0
 
-        self.is_stereo = False
         self.is_random = False
-
-        self.is_two_bits = False
 
     def serialize(self):
         return np.concatenate([
@@ -20,9 +17,7 @@ class AudioHeader:
             # Flags
             np.packbits(
                 np.asarray([
-                    self.is_stereo,
                     self.is_random,
-                    self.is_two_bits,
                 ], dtype=np.uint8)),
             # Payload size
             np.frombuffer(
