@@ -9,25 +9,27 @@ class ChunkFactory:
         self.fetched_len = 0
 
     def fetch(self, size, complete=True):
-        buffer = self.buffer
-        buffer_offset = self.buffer_offset
-
         chunks = []
 
         while size > 0:
-            if buffer is None or (len(buffer) - buffer_offset) == 0:
-                buffer = self.load()
-                buffer_offset = 0
+            if self.buffer is None or (
+                    len(self.buffer) - self.buffer_offset) == 0:
+                self.buffer = self.load()
+                self.buffer_offset = 0
 
-            if buffer is None:
+            if self.buffer is None:
                 if complete:
                     raise BufferError("buffer underflow")
                 else:
                     break
             else:
-                copy_len = min(len(buffer) - buffer_offset, size)
+                copy_len = min(len(self.buffer) - self.buffer_offset, size)
 
-                chunks.append(buffer[:copy_len])
+                chunks.append(
+                    self.buffer[self.buffer_offset:self.buffer_offset +
+                                copy_len])
+
+                self.buffer_offset += copy_len
                 size -= copy_len
 
         return np.concatenate(chunks)
