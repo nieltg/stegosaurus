@@ -38,4 +38,14 @@ def psnr_video(data_1, data_2):
     return psnr
 
 def psnr_audio(data_1, data_2):
-    pass
+    flat_size = np.prod(data_1.shape[1:])
+    
+    data_1_reshaped = data_1.reshape(-1, flat_size)
+    data_2_reshaped = data_2.reshape(-1, flat_size)
+    
+    mse = np.sum(np.subtract(data_1_reshaped,data_2_reshaped,dtype=np.int16)**2)
+    if(mse == 0):
+        return inf
+    max_value = 0xffff
+    psnr = 10 * np.log10((max_value**2) / mse)
+    return psnr
