@@ -1,2 +1,4 @@
 scikit-sound
+pygame
+pyyaml
 scikit-video
