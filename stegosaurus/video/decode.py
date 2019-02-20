@@ -1,9 +1,9 @@
 import numpy as np
 
-from .header import ChunkFactory, VideoHeader
+from .header import VideoHeader
 from .encode import build_frame_list
 
-from ..util import gen_lsb_mask
+from ..util import ChunkFactory, gen_lsb_mask
 
 
 def extract_payload(data, n_bits=1):

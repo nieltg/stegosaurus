@@ -1,43 +1,6 @@
 import numpy as np
 
-
-class ChunkFactory:
-    def __init__(self):
-        self.buffer = None
-        self.buffer_offset = 0
-
-        self.fetched_size = 0
-
-    def fetch(self, size, complete=True):
-        chunks = []
-        needed_size = size
-
-        try:
-            while needed_size > 0:
-                if self.buffer is None or (
-                        len(self.buffer) - self.buffer_offset) == 0:
-                    self.buffer = self.load()
-                    self.buffer_offset = 0
-
-                if self.buffer is None:
-                    if complete:
-                        raise BufferError("buffer underflow")
-                    else:
-                        break
-                else:
-                    copy_len = min(
-                        len(self.buffer) - self.buffer_offset, needed_size)
-
-                    chunks.append(
-                        self.buffer[self.buffer_offset:self.buffer_offset +
-                                    copy_len])
-
-                    self.buffer_offset += copy_len
-                    needed_size -= copy_len
-        finally:
-            self.fetched_size += size - needed_size
-
-        return np.concatenate(chunks)
+from ..util import ChunkFactory
 
 
 class VideoHeader:
