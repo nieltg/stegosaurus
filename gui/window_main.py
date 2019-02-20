@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from dialog_audio import DialogAudio
-from dialog_video import DialogVideo
+from gui.dialog_audio import DialogAudio
+from gui.dialog_video import DialogVideo
 from gi.repository import Gtk
 
 
