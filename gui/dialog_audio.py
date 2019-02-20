@@ -40,7 +40,7 @@ class DialogAudio(Gtk.Dialog):
                 "payload_path": "",
                 "mode": "acak"
             }
-        elif index == 0:
+        elif index == 1:
             self.data = {
                 "filename": "",
                 "key": "",

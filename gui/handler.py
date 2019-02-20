@@ -1,4 +1,5 @@
 from stegosaurus.video.encode import encode as encode_video
+from stegosaurus.video.decode import decode as decode_video
 from stegosaurus.video.header import VideoHeader
 import numpy as np
 import skvideo.io
@@ -7,7 +8,7 @@ import skvideo.datasets
 def create_header(type_data, data, payload_data):
     if type_data == 'video':
         h = VideoHeader()
-        h.payload_name = data['filename']
+        h.payload_name = data['payload_path'].split('/')[-1]
         h.payload_size = len(payload_data)
         h.is_random_pixel = data['pixel_mode'] == 'acak'
         h.is_random_frame = data['frame_mode'] == 'acak'
@@ -34,4 +35,15 @@ def encode(type_data, data):
                           "-vcodec": "png"}, verbosity=1)
         print('DONE')
     elif type_data=='audio':
+        pass
+
+def decode(type_data, data):
+    if type_data == 'video':
+        print('LOAD VIDEO')
+        video_data = load_video(data['filename'])
+        passphrase = np.frombuffer(data['key'].encode(), dtype=np.uint8)
+        header, payload = decode_video(video_data, passphrase)
+        print('DONE')
+        return header, payload
+    elif type_data == 'audio':
         pass
