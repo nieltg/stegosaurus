@@ -4,6 +4,7 @@ from .header import VideoHeader
 from .encode import build_frame_list
 
 from ..util import HeaderChunkFactory, extract_payload, gen_lsb_mask
+from ..vigenere import decrypt
 
 
 def extract_header(data):
@@ -45,5 +46,9 @@ def decode(data, passphrase=None):
                 payload_chunks.append(payload_chunk)
         else:
             break
+            
+    # Concatenate and Decrypt payload
+    payload_chunks = np.concatenate(payload_chunks)[:header.payload_size]
+    payload_chunks = decrypt(payload_chunks, passphrase)
 
-    return (header, np.concatenate(payload_chunks)[:header.payload_size])
+    return (header, payload_chunks)

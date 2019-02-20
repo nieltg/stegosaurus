@@ -4,6 +4,8 @@ from .header import VideoHeader
 
 from ..util import apply_lsb, apply_lsb_random, prepare_payload
 
+from ..vigenere import encrypt
+
 
 def apply_header(data, header):
     header_data_lsb = np.unpackbits(header.serialize())
@@ -44,6 +46,7 @@ def encode(data, payload_data, header: VideoHeader, passphrase):
 
     # Payload.
     frames = build_frame_list(data, data_header_len)
+    payload_data = encrypt(payload_data, passphrase)
 
     n_bits = 2 if header.is_two_bits else 1
     payload_lsb = prepare_payload(payload_data, n_bits)
