@@ -1,7 +1,8 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from progress_bar import ProgressBarDialog
+from gui.progress_bar import ProgressBarDialog
 from gi.repository import Gtk
+from gui.utils import open_file
 
 
 class DialogAudio(Gtk.Dialog):
@@ -23,19 +24,37 @@ class DialogAudio(Gtk.Dialog):
         page2.set_border_width(10)
         notebook.append_page(page2, Gtk.Label('Extract'))
 
+        page3 = self.get_player()
+        page3.set_border_width(10)
+        notebook.append_page(page3, Gtk.Label('Player'))
+        
+        notebook.connect('switch-page', self.callback_tab)
+        
         self.show_all()
+    
+    def callback_tab(self, notebook, tab, index):
+        if index == 0:
+            self.data = {
+                "filename": "",
+                "key": "",
+                "payload_path": "",
+                "mode": "acak"
+            }
+        elif index == 0:
+            self.data = {
+                "filename": "",
+                "key": "",
+                "save_path": ""
+            }
+        else:
+            self.data = {
+                "filename": ""
+            }
 
     def on_file_selected(self, widget, name):
         self.data[name] = widget.get_filename()
 
     def get_hide_msg_window(self):
-        self.data = {
-            "filename": "",
-            "key": "",
-            "text_path": "",
-            "frame_mode": "acak",
-            "pixel_mode": "acak"
-        }
         grid = Gtk.Grid(column_homogeneous=True)
         grid.set_column_spacing(10)
         grid.set_row_spacing(10)
@@ -48,33 +67,20 @@ class DialogAudio(Gtk.Dialog):
         button_open_text = Gtk.FileChooserButton("Open File")
         button_open_text.set_width_chars(15)
         button_open_text.connect(
-            "selection-changed", self.on_file_selected, "text_path")
+            "selection-changed", self.on_file_selected, "payload_path")
 
         hbox1 = Gtk.Box()
         btn_frame_acak = Gtk.RadioButton.new_with_label_from_widget(
-            None, "Frame Acak")
+            None, "Mode Acak")
         btn_frame_acak.connect(
-            "toggled", self.on_button_toggled, ("frame_mode", "acak"))
+            "toggled", self.on_button_toggled, ("mode", "acak"))
 
         btn_frame_seq = Gtk.RadioButton.new_from_widget(btn_frame_acak)
-        btn_frame_seq.set_label("Frame Sequential")
+        btn_frame_seq.set_label("Mode Sequential")
         btn_frame_seq.connect(
-            "toggled", self.on_button_toggled, ("frame_mode", "seq"))
+            "toggled", self.on_button_toggled, ("mode", "seq"))
         hbox1.pack_start(btn_frame_acak, True, True, 10)
         hbox1.pack_start(btn_frame_seq, True, True, 10)
-
-        hbox2 = Gtk.Box()
-        btn_pixel_acak = Gtk.RadioButton.new_with_label_from_widget(
-            None, "Pixel Acak")
-        btn_pixel_acak.connect(
-            "toggled", self.on_button_toggled, ("pixel_mode", "acak"))
-
-        btn_pixel_seq = Gtk.RadioButton.new_from_widget(btn_pixel_acak)
-        btn_pixel_seq.set_label("Pixel Sequential")
-        btn_pixel_seq.connect(
-            "toggled", self.on_button_toggled, ("pixel_mode", "seq"))
-        hbox2.pack_start(btn_pixel_acak, True, True, 10)
-        hbox2.pack_start(btn_pixel_seq, True, True, 10)
 
         btn_encrypt_and_hide = Gtk.Button("Encrypt & Hide")
         btn_encrypt_and_hide.connect("clicked", self.on_button_submit, {
@@ -88,31 +94,11 @@ class DialogAudio(Gtk.Dialog):
         grid.attach(Gtk.Label("Text"), 0, 2, 1, 1)
         grid.attach(button_open_text, 1, 2, 3, 1)
         grid.attach(hbox1, 0, 3, 4, 1)
-        grid.attach(hbox2, 0, 4, 4, 1)
         grid.attach(btn_encrypt_and_hide, 0, 5, 4, 1)
 
         return grid
-
-    def on_button_toggled(self, button, data):
-        if button.get_active():
-            self.page1[data[0]] = data[1]
-
-    def on_button_submit(self, button, additional_data):
-        self.data["key"] = additional_data["key_entry"].get_text()
-        if additional_data.get("save_path"):
-            self.data["save_path"] = additional_data["save_path"].get_text()
-        print(self.data)
-        dialog = ProgressBarDialog(self)
-        response = dialog.run()
-
-        dialog.destroy()
-
+    
     def get_extract_msg_window(self):
-        self.data = {
-            "filename": "",
-            "key": "",
-            "save_path": ""
-        }
         grid = Gtk.Grid(column_homogeneous=True)
         grid.set_column_spacing(10)
         grid.set_row_spacing(10)
@@ -138,3 +124,39 @@ class DialogAudio(Gtk.Dialog):
         grid.attach(btn_extract, 0, 3, 4, 1)
 
         return grid
+
+    def get_player(self):
+        grid = Gtk.Grid(column_homogeneous=True)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+        button_open = Gtk.FileChooserButton("Open File")
+        button_open.set_width_chars(15)
+        button_open.connect("selection-changed",
+                            self.on_file_selected, "filename")
+        btn_play = Gtk.Button("Play")
+        btn_play.connect('clicked', self.on_button_play)
+
+        grid.attach(Gtk.Label("Choose Audio"), 0, 0, 1, 1)
+        grid.attach(button_open, 1, 0, 3, 1)
+        grid.attach(btn_play, 0, 1, 4, 1)
+
+        return grid
+
+    def on_button_toggled(self, button, data):
+        if button.get_active():
+            self.data[data[0]] = data[1]
+
+    def on_button_submit(self, button, additional_data):
+        if additional_data.get("key_entry"):
+            self.data["key"] = additional_data["key_entry"].get_text()
+        if additional_data.get("save_path"):
+            self.data["save_path"] = additional_data["save_path"].get_text()
+        print(self.data)
+        dialog = ProgressBarDialog(self)
+        response = dialog.run()
+
+        dialog.destroy()
+
+    def on_button_play(self, button):
+        open_file(self.data['filename'])
+
