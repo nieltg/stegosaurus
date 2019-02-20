@@ -4,6 +4,7 @@ from stegosaurus.video.header import VideoHeader
 from stegosaurus.audio.encode import encode as encode_audio
 from stegosaurus.audio.decode import decode as decode_audio
 from stegosaurus.audio.header import AudioHeader
+from stegosaurus.util import psnr_audio, psnr_video
 from sksound.sounds import Sound
 import numpy as np
 import skvideo.io
@@ -71,3 +72,9 @@ def decode(type_data, data):
         header, payload = decode_audio(audio_data, passphrase)
         print('DONE')
         return header, payload
+
+def psnr(type_data, data1, data2):
+    if type_data == 'video':
+        return psnr_video(load_video(data1), load_video(data2))
+    elif type_data == 'audio':
+        return psnr_audio(Sound(data1).data, Sound(data2).data)

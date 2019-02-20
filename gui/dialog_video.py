@@ -1,10 +1,9 @@
+from gui.handler import encode, decode, psnr
 import gi
 gi.require_version('Gtk', '3.0')
 from gui.progress_bar import ProgressBarDialog
 from gi.repository import Gtk
 from gui.utils import open_file
-from gui.handler import encode, decode
-import time
 
 class DialogVideo(Gtk.Dialog):
 
@@ -28,6 +27,10 @@ class DialogVideo(Gtk.Dialog):
         page3 = self.get_player()
         page3.set_border_width(10)
         notebook.append_page(page3, Gtk.Label('Player'))
+
+        page4 = self.get_psnr_box()
+        page4.set_border_width(10)
+        notebook.append_page(page4, Gtk.Label('PSNR'))
 
         notebook.connect('switch-page', self.callback_tab)
 
@@ -175,6 +178,38 @@ class DialogVideo(Gtk.Dialog):
 
         return grid
 
+    def get_psnr_box(self):
+        grid = Gtk.Grid(column_homogeneous=True)
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(10)
+        button_open = Gtk.FileChooserButton("Open Original File")
+        button_open.set_width_chars(15)
+        button_open.connect("selection-changed",
+                            self.on_file_selected, "data1")
+        button_open2 = Gtk.FileChooserButton("Open Edited File")
+        button_open2.set_width_chars(15)
+        button_open2.connect("selection-changed",
+                             self.on_file_selected, "data2")
+
+        btn_psnr = Gtk.Button("Calculate PSNR!")
+        btn_psnr.connect('clicked', self.on_button_psnr)
+
+        self.psnr_label = Gtk.Entry()
+        self.psnr_label.set_sensitive(False)
+
+        grid.attach(Gtk.Label("Choose Original File"), 0, 0, 1, 1)
+        grid.attach(button_open, 1, 0, 3, 1)
+        grid.attach(Gtk.Label("Choose Edited File"), 0, 1, 1, 1)
+        grid.attach(button_open2, 1, 1, 3, 1)
+        grid.attach(btn_psnr, 0, 2, 4, 1)
+        grid.attach(self.psnr_label, 0, 3, 4, 1)
+
+        return grid
+
+    def on_button_psnr(self, button):
+        self.psnr_label.set_text(
+            str(psnr('video', self.data['data1'], self.data['data2'])))
+
     def on_button_toggled(self, button, data):
         if button.get_active():
             self.data[data[0]] = data[1]
@@ -205,7 +240,6 @@ class DialogVideo(Gtk.Dialog):
         self.filename_save.set_text("Save complete!")
         self.button_save.set_sensitive(False)
         self.filename_save.set_sensitive(False)
-        time.sleep(2)
         self.destroy()
 
     def on_button_play(self, button):
