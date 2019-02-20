@@ -2,8 +2,8 @@ import numpy as np
 
 
 def extract_payload(data, n_bits=1):
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
-    data_lsb = data & lsb_mask
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
+    data_lsb = (data & lsb_mask).astype(np.uint8)
 
     lsb_bits = np.unpackbits(data_lsb.reshape(-1, 1), axis=-1)[:, 8 - n_bits:8]
     return np.packbits(lsb_bits)
