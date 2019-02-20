@@ -16,7 +16,7 @@ def prepare_payload(payload_data, n_bits=1):
 
 
 def apply_lsb(data, data_lsb, n_bits=1):
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
 
     data &= ~lsb_mask
     data |= data_lsb
@@ -27,7 +27,7 @@ def apply_lsb_random(data, data_lsb, r, n_bits=1):
     r.shuffle(indices)
     indices = indices[:len(data_lsb)]
 
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
 
     data.put(indices, (data[indices] & lsb_mask) | data_lsb)
 
