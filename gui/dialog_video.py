@@ -1,10 +1,10 @@
-from threading import Thread
 import gi
 gi.require_version('Gtk', '3.0')
 from gui.progress_bar import ProgressBarDialog
 from gi.repository import Gtk
 from gui.utils import open_file
 from gui.handler import encode, decode
+import time
 
 class DialogVideo(Gtk.Dialog):
 
@@ -184,6 +184,7 @@ class DialogVideo(Gtk.Dialog):
             self.data["key"] = additional_data["key_entry"].get_text()
         if additional_data.get("save_path"):
             self.data["save_path"] = additional_data["save_path"].get_text()
+        print(self.data)
         if additional_data.get('is_encode'):
             encode('video', self.data)
             self.text_progress1.set_text("Complete!")
@@ -204,6 +205,8 @@ class DialogVideo(Gtk.Dialog):
         self.filename_save.set_text("Save complete!")
         self.button_save.set_sensitive(False)
         self.filename_save.set_sensitive(False)
+        time.sleep(2)
+        self.destroy()
 
     def on_button_play(self, button):
         open_file(self.data['filename'])

@@ -1,6 +1,10 @@
 from stegosaurus.video.encode import encode as encode_video
 from stegosaurus.video.decode import decode as decode_video
 from stegosaurus.video.header import VideoHeader
+from stegosaurus.audio.encode import encode as encode_audio
+from stegosaurus.audio.decode import decode as decode_audio
+from stegosaurus.audio.header import AudioHeader
+from sksound.sounds import Sound
 import numpy as np
 import skvideo.io
 import skvideo.datasets
@@ -14,7 +18,10 @@ def create_header(type_data, data, payload_data):
         h.is_random_frame = data['frame_mode'] == 'acak'
         return h
     elif type_data == 'audio':
-        pass
+        h = AudioHeader()
+        h.payload_name = data['payload_path'].split('/')[-1]
+        h.is_random_frame = data['mode'] == 'acak'
+        return h
 
 def load_video(filename):
     return skvideo.io.vread(filename, verbosity=1)
@@ -35,7 +42,18 @@ def encode(type_data, data):
                           "-vcodec": "png"}, verbosity=1)
         print('DONE')
     elif type_data=='audio':
-        pass
+        print('LOAD AUDIO')
+        audio = Sound(data['filename'])
+        audio.summary()
+        audio_data = np.copy(audio.data)
+        print('LOAD PLAYLOAD')
+        payload_data = load_payload(data['payload_path'])
+        header = create_header('audio', data, payload_data)
+        passphrase = np.frombuffer(data['key'].encode(), dtype=np.uint8)
+        encode_audio(audio_data, payload_data, header, passphrase)
+        stego_audio = Sound(inData=audio_data, inRate=audio.rate)
+        stego_audio.write_wav(data['save_path'])
+        print('DONE')
 
 def decode(type_data, data):
     if type_data == 'video':
@@ -46,4 +64,10 @@ def decode(type_data, data):
         print('DONE')
         return header, payload
     elif type_data == 'audio':
-        pass
+        audio = Sound(data['filename'])
+        audio.summary()
+        audio_data = np.copy(audio.data)
+        passphrase = np.frombuffer(data['key'].encode(), dtype=np.uint8)
+        header, payload = decode_audio(audio_data, passphrase)
+        print('DONE')
+        return header, payload

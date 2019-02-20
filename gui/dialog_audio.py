@@ -1,9 +1,10 @@
 import gi
 gi.require_version('Gtk', '3.0')
+from gui.handler import encode, decode
 from gui.progress_bar import ProgressBarDialog
 from gi.repository import Gtk
 from gui.utils import open_file
-
+import time
 
 class DialogAudio(Gtk.Dialog):
 
@@ -40,12 +41,13 @@ class DialogAudio(Gtk.Dialog):
                 "payload_path": "",
                 "mode": "acak"
             }
+            self.text_progress1.set_text("")
         elif index == 1:
             self.data = {
                 "filename": "",
-                "key": "",
-                "save_path": ""
+                "key": ""
             }
+            self.text_progress2.set_text("")
         else:
             self.data = {
                 "filename": ""
@@ -69,6 +71,8 @@ class DialogAudio(Gtk.Dialog):
         button_open_text.connect(
             "selection-changed", self.on_file_selected, "payload_path")
 
+        save_path = Gtk.Entry()
+
         hbox1 = Gtk.Box()
         btn_frame_acak = Gtk.RadioButton.new_with_label_from_widget(
             None, "Mode Acak")
@@ -84,8 +88,12 @@ class DialogAudio(Gtk.Dialog):
 
         btn_encrypt_and_hide = Gtk.Button("Encrypt & Hide")
         btn_encrypt_and_hide.connect("clicked", self.on_button_submit, {
-            "key_entry": key_entry
+            "key_entry": key_entry,
+            "save_path": save_path,
+            "is_encode": True
         })
+
+        self.text_progress1 = Gtk.Label("")
 
         grid.attach(Gtk.Label("Choose Audio"), 0, 0, 1, 1)
         grid.attach(button_open, 1, 0, 3, 1)
@@ -93,8 +101,11 @@ class DialogAudio(Gtk.Dialog):
         grid.attach(key_entry, 1, 1, 3, 1)
         grid.attach(Gtk.Label("Text"), 0, 2, 1, 1)
         grid.attach(button_open_text, 1, 2, 3, 1)
-        grid.attach(hbox1, 0, 3, 4, 1)
+        grid.attach(Gtk.Label("Save File Path"), 0, 3, 1, 1)
+        grid.attach(save_path, 1, 3, 3, 1)
+        grid.attach(hbox1, 0, 4, 4, 1)
         grid.attach(btn_encrypt_and_hide, 0, 5, 4, 1)
+        grid.attach(self.text_progress1, 0, 6, 4, 1)
 
         return grid
     
@@ -107,21 +118,27 @@ class DialogAudio(Gtk.Dialog):
         button_open.connect("selection-changed",
                             self.on_file_selected, "filename")
         key_entry = Gtk.Entry()
-        save_path = Gtk.Entry()
 
         btn_extract = Gtk.Button("Extract")
         btn_extract.connect('clicked', self.on_button_submit, {
             "key_entry": key_entry,
-            "save_path": save_path
+            "is_encode": False
         })
 
-        grid.attach(Gtk.Label("Choose Video"), 0, 0, 1, 1)
+        self.text_progress2 = Gtk.Label("")
+        self.button_save = Gtk.Button("Save")
+        self.button_save.set_sensitive(False)
+        self.filename_save = Gtk.Entry()
+        self.filename_save.set_sensitive(False)
+
+        grid.attach(Gtk.Label("Choose Audio"), 0, 0, 1, 1)
         grid.attach(button_open, 1, 0, 3, 1)
         grid.attach(Gtk.Label("Key"), 0, 1, 1, 1)
         grid.attach(key_entry, 1, 1, 3, 1)
-        grid.attach(Gtk.Label("Save File Path"), 0, 2, 1, 1)
-        grid.attach(save_path, 1, 2, 3, 1)
-        grid.attach(btn_extract, 0, 3, 4, 1)
+        grid.attach(btn_extract, 0, 2, 4, 1)
+        grid.attach(self.text_progress2, 0, 3, 4, 1)
+        grid.attach(self.button_save, 0, 4, 1, 1)
+        grid.attach(self.filename_save, 1, 4, 3, 1)
 
         return grid
 
@@ -152,10 +169,33 @@ class DialogAudio(Gtk.Dialog):
         if additional_data.get("save_path"):
             self.data["save_path"] = additional_data["save_path"].get_text()
         print(self.data)
-        dialog = ProgressBarDialog(self)
-        response = dialog.run()
+        if additional_data.get('is_encode'):
+            encode('audio', self.data)
+            self.text_progress1.set_text("Complete!")
+        else:
+            header, payload = decode('audio', self.data)
+            self.text_progress2.set_text("Complete!")
+            self.button_save.set_sensitive(True)
+            self.filename_save.set_sensitive(True)
+            self.filename_save.set_text("./" + header.payload_name)
+            self.button_save.connect('clicked', self.on_button_save, {
+                "payload": payload,
+                "filename": self.filename_save
+            })
 
-        dialog.destroy()
+        # dialog = ProgressBarDialog(self)
+        # response = dialog.run()
+
+        # dialog.destroy()
+
+    def on_button_save(self, button, data):
+        with open(data['filename'].get_text(), 'wb') as f:
+            f.write(data['payload'])
+        self.filename_save.set_text("Save complete!")
+        self.button_save.set_sensitive(False)
+        self.filename_save.set_sensitive(False)
+        time.sleep(2)
+        self.destroy()
 
     def on_button_play(self, button):
         open_file(self.data['filename'])
