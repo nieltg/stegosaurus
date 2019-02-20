@@ -3,7 +3,7 @@ import numpy as np
 from .header import VideoHeader
 from .encode import build_frame_list
 
-from ..util import HeaderChunkFactory, extract_payload, gen_lsb_mask
+from ..util import HeaderChunkFactory, extract_payload, extract_payload_random, gen_lsb_mask
 from ..vigenere import decrypt
 
 
@@ -37,16 +37,15 @@ def decode(data, passphrase=None):
 
         if payload_chunks_len < header.payload_size:
             if header.is_random_pixel:
-                pass
-                # TODO: Random pixel.
+                payload_chunk = extract_payload_random(frame, r, n_bits)
             else:
                 payload_chunk = extract_payload(frame, n_bits)
-                payload_chunks_len += len(payload_chunk)
 
-                payload_chunks.append(payload_chunk)
+            payload_chunks_len += len(payload_chunk)
+            payload_chunks.append(payload_chunk)
         else:
             break
-            
+
     # Concatenate and Decrypt payload
     payload_chunks = np.concatenate(payload_chunks)[:header.payload_size]
     payload_chunks = decrypt(payload_chunks, passphrase)

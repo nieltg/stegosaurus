@@ -9,6 +9,12 @@ def extract_payload(data, n_bits=1):
     return np.packbits(lsb_bits)
 
 
+def extract_payload_random(data, r, n_bits=1):
+    indices = np.arange(len(data))
+    r.shuffle(indices)
+
+    return extract_payload(data[indices], n_bits)
+
 class ChunkFactory:
     def __init__(self):
         self.buffer = None
@@ -89,8 +95,7 @@ def apply_lsb_random(data, data_lsb, r, n_bits=1):
     indices = indices[:len(data_lsb)]
 
     lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
-
-    data.put(indices, (data[indices] & lsb_mask) | data_lsb)
+    data.put(indices, (data[indices] & ~lsb_mask) | data_lsb)
 
 
 def psnr_video(data_1, data_2):
@@ -110,10 +115,10 @@ def psnr_video(data_1, data_2):
 
 def psnr_audio(data_1, data_2):
     flat_size = np.prod(data_1.shape[1:])
-    
+
     data_1_reshaped = data_1.reshape(-1, flat_size)
     data_2_reshaped = data_2.reshape(-1, flat_size)
-    
+
     mse = np.sum(np.subtract(data_1_reshaped,data_2_reshaped,dtype=np.int16)**2)
     if(mse == 0):
         return inf
