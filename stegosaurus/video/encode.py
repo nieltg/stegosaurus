@@ -1,10 +1,8 @@
 import numpy as np
 
-from random import Random
-
 from .header import VideoHeader
 
-from ..util import apply_lsb
+from ..util import apply_lsb, apply_lsb_random, prepare_payload
 
 
 def apply_header(data, header):
@@ -35,16 +33,11 @@ def build_frame_list(data, data_header_len):
     return frames
 
 
-def prepare_payload(payload_data, n_bits=1):
-    payload_bits = np.unpackbits(payload_data).reshape(-1, n_bits)
-
-    payload_msbs = np.packbits(payload_bits, axis=-1).reshape(-1)
-    return np.right_shift(payload_msbs, 8 - n_bits)
-
-
 def encode(data, payload_data, header: VideoHeader, passphrase):
-    r = Random()
-    r.seed(passphrase)
+    r = np.random.RandomState(passphrase)
+
+    # Metadata.
+    header.payload_size = len(payload_data)
 
     # Header.
     data_header_len = apply_header(data, header)
@@ -73,9 +66,11 @@ def encode(data, payload_data, header: VideoHeader, passphrase):
             frame_payload_lsb = payload_lsb[payload_lsb_index:
                                             payload_lsb_index + copy_len]
 
-            # TODO: Random pixel.
+            if header.is_random_pixel:
+                apply_lsb_random(frame, frame_payload_lsb, r, n_bits)
+            else:
+                apply_lsb(frame[:copy_len], frame_payload_lsb, n_bits)
 
-            apply_lsb(frame[:copy_len], frame_payload_lsb, n_bits)
             payload_lsb_index += copy_len
         else:
             return True
