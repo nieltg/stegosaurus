@@ -21,14 +21,13 @@ def encode(data, payload_data, header, passphrase=None):
     # Metadata.
     header.payload_size = len(payload_data)
 
+    flat_data = data.reshape(-1)
+
     # Header.
-    data_header_len = apply_header(data, header)
+    data_header_len = apply_header(flat_data, header)
 
     # Payload.
-    flat_data = data.reshape(-1)
-    payload_data = encrypt(payload_data,passphrase)
-
-    payload_lsb = prepare_payload(payload_data)
+    payload_lsb = prepare_payload(encrypt(payload_data, passphrase))
 
     if header.is_random:
         apply_lsb_random(flat_data[data_header_len:], payload_lsb, r)
