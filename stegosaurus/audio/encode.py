@@ -26,6 +26,7 @@ def encode(data, payload_data, header, passphrase=None):
 
     # Payload.
     flat_data = data.reshape(-1)
+    payload_data = encrypt(payload_data,passphrase)
 
     payload_lsb = prepare_payload(payload_data)
 
