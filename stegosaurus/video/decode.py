@@ -1,31 +1,9 @@
 import numpy as np
 
-from .header import ChunkFactory, VideoHeader
+from .header import VideoHeader
 from .encode import build_frame_list
 
-from ..util import gen_lsb_mask
-
-
-def extract_payload(data, n_bits=1):
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
-    data_lsb = data & lsb_mask
-
-    lsb_bits = np.unpackbits(data_lsb.reshape(-1, 1), axis=-1)[:, 8 - n_bits:8]
-    return np.packbits(lsb_bits)
-
-
-class HeaderChunkFactory(ChunkFactory):
-    chunk_size = 1024
-
-    def __init__(self, data):
-        super().__init__()
-        self.data = data
-
-    def load(self):
-        chunk_size = self.chunk_size
-
-        data, self.data = self.data[:chunk_size], self.data[chunk_size:]
-        return extract_payload(data)
+from ..util import HeaderChunkFactory, extract_payload, gen_lsb_mask
 
 
 def extract_header(data):

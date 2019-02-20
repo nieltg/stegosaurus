@@ -1,6 +1,67 @@
 import numpy as np
 
 
+def extract_payload(data, n_bits=1):
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
+    data_lsb = (data & lsb_mask).astype(np.uint8)
+
+    lsb_bits = np.unpackbits(data_lsb.reshape(-1, 1), axis=-1)[:, 8 - n_bits:8]
+    return np.packbits(lsb_bits)
+
+
+class ChunkFactory:
+    def __init__(self):
+        self.buffer = None
+        self.buffer_offset = 0
+
+        self.fetched_size = 0
+
+    def fetch(self, size, complete=True):
+        chunks = []
+        needed_size = size
+
+        try:
+            while needed_size > 0:
+                if self.buffer is None or (
+                        len(self.buffer) - self.buffer_offset) == 0:
+                    self.buffer = self.load()
+                    self.buffer_offset = 0
+
+                if self.buffer is None:
+                    if complete:
+                        raise BufferError("buffer underflow")
+                    else:
+                        break
+                else:
+                    copy_len = min(
+                        len(self.buffer) - self.buffer_offset, needed_size)
+
+                    chunks.append(
+                        self.buffer[self.buffer_offset:self.buffer_offset +
+                                    copy_len])
+
+                    self.buffer_offset += copy_len
+                    needed_size -= copy_len
+        finally:
+            self.fetched_size += size - needed_size
+
+        return np.concatenate(chunks)
+
+
+class HeaderChunkFactory(ChunkFactory):
+    chunk_size = 1024
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    def load(self):
+        chunk_size = self.chunk_size
+
+        data, self.data = self.data[:chunk_size], self.data[chunk_size:]
+        return extract_payload(data)
+
+
 def gen_lsb_mask(n_bits=1):
     mask = 0
     for i in range(0, n_bits):
@@ -16,7 +77,7 @@ def prepare_payload(payload_data, n_bits=1):
 
 
 def apply_lsb(data, data_lsb, n_bits=1):
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
 
     data &= ~lsb_mask
     data |= data_lsb
@@ -27,7 +88,7 @@ def apply_lsb_random(data, data_lsb, r, n_bits=1):
     r.shuffle(indices)
     indices = indices[:len(data_lsb)]
 
-    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=np.uint8)
+    lsb_mask = np.asarray([gen_lsb_mask(n_bits)], dtype=data.dtype)
 
     data.put(indices, (data[indices] & lsb_mask) | data_lsb)
 

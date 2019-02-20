@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..util import apply_lsb
+from ..util import apply_lsb, apply_lsb_random, prepare_payload
 
 from ..vigenere import encrypt
 
@@ -8,26 +8,30 @@ from .header import AudioHeader
 
 def apply_header(data, header):
     header_data_lsb = np.unpackbits(header.serialize())
-    
+
     copy_len = len(header_data_lsb)
-    
+
     apply_lsb(data.reshape(-1)[:copy_len], header_data_lsb)
     return copy_len
 
+
 def encode(data, payload_data, header, passphrase=None):
-    # Put header
+    r = np.random.RandomState(passphrase)
+
+    # Metadata.
+    header.payload_size = len(payload_data)
+
+    # Header.
     data_header_len = apply_header(data, header)
-    
-    # Encrypt payload
-    if(header.is_random):
-        # Random bits here
-        return false;
+
+    # Payload.
+    flat_data = data.reshape(-1)
+
+    payload_lsb = prepare_payload(payload_data)
+
+    if header.is_random:
+        apply_lsb_random(flat_data[data_header_len:], payload_lsb, r)
     else:
-        payload_data = encrypt(payload_data, passphrase)
-    
-    # Put encrypted payload
-    apply_lsb(data[data_header_len:data_header_len+len(payload_data)],payload_data, 1)
-    
-def stereo_to_mono(data):
-    data = np.repeat(data,2)
-    return data
+        apply_lsb(flat_data[data_header_len:data_header_len + len(payload_lsb)], payload_lsb)
+
+    return True
