@@ -4,6 +4,7 @@ from gui.handler import encode, decode, psnr
 from gui.progress_bar import ProgressBarDialog
 from gi.repository import Gtk
 from gui.utils import open_file
+from gui.error_dialog import DialogError
 
 
 class DialogAudio(Gtk.Dialog):
@@ -103,7 +104,7 @@ class DialogAudio(Gtk.Dialog):
         grid.attach(button_open, 1, 0, 3, 1)
         grid.attach(Gtk.Label("Key"), 0, 1, 1, 1)
         grid.attach(key_entry, 1, 1, 3, 1)
-        grid.attach(Gtk.Label("Text"), 0, 2, 1, 1)
+        grid.attach(Gtk.Label("Payload"), 0, 2, 1, 1)
         grid.attach(button_open_text, 1, 2, 3, 1)
         grid.attach(Gtk.Label("Save File Path"), 0, 3, 1, 1)
         grid.attach(save_path, 1, 3, 3, 1)
@@ -206,7 +207,14 @@ class DialogAudio(Gtk.Dialog):
             self.data["save_path"] = additional_data["save_path"].get_text()
         print(self.data)
         if additional_data.get('is_encode'):
-            encode('audio', self.data)
+            try:
+                encode('audio', self.data)
+            except Exception as e:
+                self.error = e
+                dialog = DialogError(self)
+                dialog.run()
+                dialog.destroy()
+                raise e
             self.text_progress1.set_text("Complete!")
         else:
             header, payload = decode('audio', self.data)
